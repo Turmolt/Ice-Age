@@ -26,8 +26,8 @@ namespace Ice_Age
     public partial class MainWindow : Window
     {
 
-        private string noticeage = "S:\\Coding\\C#\\Hackaton\\noticeage.png";
-        private string iceage = "S:\\Coding\\C#\\Hackaton\\iceage.jpg";
+        private string noticeage = @"\Images\noticeage.png";
+        private string iceage = @"\Images\iceage.jpg";
         public MainWindow()
         {
             InitializeComponent();
@@ -35,7 +35,7 @@ namespace Ice_Age
 
         public void ShowResult(bool result)
         {
-            Uri resourceUri = new Uri(result ? iceage : noticeage, UriKind.Absolute);
+            Uri resourceUri = new Uri(result ? iceage : noticeage, UriKind.Relative);
             Results.Source = new BitmapImage(resourceUri);
         }
 

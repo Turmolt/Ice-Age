@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using SoundFingerprinting;
 using SoundFingerprinting.Audio;
 using SoundFingerprinting.Audio.NAudio;
 using SoundFingerprinting.Builder;
-using SoundFingerprinting.DAO.Data;
 using SoundFingerprinting.Data;
 using SoundFingerprinting.InMemory;
 using SoundFingerprinting.Query;
@@ -23,18 +18,15 @@ namespace Ice_Age
     /// </summary>
     public partial class App : Application
     {
-
         private readonly IModelService modelService = new InMemoryModelService();
-        private readonly IAudioService audioService =  new NAudioService();// SoundFingerprintingAudioService();
-        private NAudioSoundCaptureService captureService = new NAudioSoundCaptureService();
-        private NAudioWaveFileUtility fileUtility = new NAudioWaveFileUtility();
+        private readonly IAudioService audioService =  new NAudioService();
 
         private WaveIn sourceStream = null;
         private WaveFileWriter waveFile = null;
 
         private MainWindow wnd;
-        private string iceage_path = @"S:\Coding\C#\Hackaton\iceage_full.mp3";
-        private string mic_path = @"S:\Coding\C#\Hackaton\sample.wav";
+        private string iceage_path = "INSERT_PATH_TO_ICE_AGE_AUDIO_HERE"; //@"S:\Coding\C#\Hackaton\iceage_full.mp3";
+        private string mic_path = Environment.CurrentDirectory + "/sample.wav";
         private async void Start(object sender, StartupEventArgs e)
         {
             //setup window
@@ -45,6 +37,7 @@ namespace Ice_Age
             //create fingerprint for ice age
             StoreFingerprint(iceage_path);
 
+            //listen to microphone
             await ListenToMicrophone();
         }
 
@@ -63,15 +56,19 @@ namespace Ice_Age
         async Task ListenToMicrophone()
         {
             QueryResult result = null;
+
             while (true)
             {
                 //setup mic stream and file writer
                 CreateMicStream();
 
+                //record 10 seconds
                 await CheckMicrophoneFeed();
 
+                //feed to the fingerprint matching algorithm
                 result = await QueryFingerprint(mic_path);
 
+                //check the results
                 ActOnResult(result);
 
                 await Task.Delay(1);
@@ -142,8 +139,6 @@ namespace Ice_Age
             int secondsToAnalyze = 7;
             int startAtSecond = 0;
 
-            Console.WriteLine("Querying");
-
             var queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
                 .From(path, secondsToAnalyze, startAtSecond)
                 .UsingServices(modelService, audioService)
@@ -155,7 +150,6 @@ namespace Ice_Age
         private void OnApplicationQuit(object sender, ExitEventArgs e)
         {
             modelService.DeleteTrack("0");
-            
         }
 
     }
